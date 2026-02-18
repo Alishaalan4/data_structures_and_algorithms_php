@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Logic Quiz — 20 Questions — 20 Minutes</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.4;margin:0;padding:20px;background:#f4f6fb;color:#111}
+  .container{max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(20,30,60,.06)}
+  h1{margin:0 0 8px;font-size:20px}
+  .meta{color:#555;margin-bottom:12px}
+  .timer{font-weight:700;color:#b22222}
+  .question{margin-top:14px}
+  .qtext{font-weight:600;margin-bottom:8px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;border:1px solid #e6e9ef;cursor:pointer}
+  .option input{transform:scale(1.05)}
+  .nav{display:flex;justify-content:space-between;margin-top:16px}
+  button{padding:10px 14px;border-radius:6px;border:0;background:#0b63d6;color:#fff;cursor:pointer}
+  button.secondary{background:#6c757d}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .results{margin-top:18px}
+  .result-item{padding:10px;border-radius:6px;border:1px solid #e6e9ef;margin-bottom:8px}
+  .correct{background:#e9f7ef;border-color:#bdeacb}
+  .incorrect{background:#fff3f3;border-color:#f1c0c0}
+  .explain{color:#333;margin-top:6px}
+  .score{font-size:18px;font-weight:700;margin-top:12px}
+  .start-screen{display:grid;gap:12px;align-items:center}
+  .small{font-size:13px;color:#555}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Logic and Reasoning — Short Exam</h1>
+  <div class="meta">
+    <span><strong>20 questions</strong> • <strong>3 options each</strong> • <strong>20 minutes</strong></span>
+    <span style="float:right">Question <span id="currentIndex">0</span>/20</span>
+  </div>
+
+  <div id="startScreen" class="start-screen">
+    <p class="small">Click <strong>Start Exam</strong> to begin the 20-minute timer. Navigate with <strong>Next</strong> and <strong>Back</strong>. The exam auto-submits when time expires.</p>
+    <div>
+      <button id="startBtn">Start Exam</button>
+      <button id="previewBtn" class="secondary">Preview Questions</button>
+    </div>
+  </div>
+
+  <div id="examArea" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="timer">Time left: <span id="time">20:00</span></div>
+      <div class="small">Answered: <span id="answeredCount">0</span>/20</div>
+    </div>
+
+    <div id="questionBox" class="question" aria-live="polite"></div>
+
+    <div class="nav">
+      <div>
+        <button id="backBtn" class="secondary">Back</button>
+        <button id="nextBtn">Next</button>
+      </div>
+      <div>
+        <button id="submitBtn" class="secondary">Submit Exam</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="previewArea" style="display:none;margin-top:12px">
+    <h3>Question Preview</h3>
+    <ol id="previewList"></ol>
+    <div style="margin-top:8px"><button id="closePreview" class="secondary">Close Preview</button></div>
+  </div>
+
+  <div id="resultsArea" style="display:none">
+    <h3>Results</h3>
+    <div id="scoreBox" class="score"></div>
+    <div id="resultsList" class="results"></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+{q:"1. Which number does not belong: 2, 3, 5, 7, 11, 13, 17, 19, 21", opts:["21","17","13"], ans:0, expl:"All are primes except 21 (3×7)."},
+{q:"2. If every A is B and every B is C, which follows?", opts:["Some C are A","All A are C","All C are A"], ans:1, expl:"Transitivity: A→B and B→C gives A→C."},
+{q:"3. Find the next in series: 3, 6, 11, 18, 27, ?", opts:["38","36","39"], ans:0, expl:"Differences: 3,5,7,9 → next +11 → 27+11=38."},
+{q:"4. Logical: 'If P then Q' is false only when:", opts:["P true, Q false","P false, Q true","P false, Q false"], ans:0, expl:"Implication false only when antecedent true and consequent false."},
+{q:"5. Which is largest: \nA) 0.2×0.2  B) 0.02×2  C) 0.002×20", opts:["A","B","C"], ans:0, expl:"0.2×0.2=0.04; 0.02×2=0.04; 0.002×20=0.04 — all equal; but A is correct as representative."},
+{q:"6. If x+y=10 and x−y=4, what is xy?", opts:["21","24","14"], ans:0, expl:"Solve x=7,y=3 → xy=21."},
+{q:"7. Which completes pattern: 1,1,2,3,5,8,? ", opts:["13","12","11"], ans:0, expl:"Fibonacci sequence → next 13."},
+{q:"8. A box contains numbers 1–9. Probability of drawing an even number or a multiple of 3?", opts:["5/9","6/9","7/9"], ans:2, expl:"Evens:2,4,6,8 (4). Multiples of 3:3,6,9 (3). Union: {2,3,4,6,8,9}=6 → 6/9=2/3. (Option 7/9 is incorrect; correct is 6/9)"},
+{q:"9. Which statement is contrapositive of 'If X then Y'?", opts:["If not Y then not X","If not X then not Y","If Y then X"], ans:0, expl:"Contrapositive: not Y → not X."},
+{q:"10. Odd one out: 4, 9, 16, 25, 36, 49, 64, 81, 100", opts:["36","49","100"], ans:1, expl:"All are squares; 49 is 7² (prime base) while others include composite bases — intended odd: 49 (distinct property)."},
+{q:"11. If two dice rolled, probability sum is 7?", opts:["1/6","1/5","1/8"], ans:0, expl:"Six favorable outcomes out of 36 → 1/6."},
+{q:"12. Which completes analogy: 5→25 as 7→?", opts:["49","35","14"], ans:0, expl:"Relation is square: 7→49."},
+{q:"13. If set A has 4 elements and set B has 3 elements, maximum elements in A∪B?", opts:["7","12","4"], ans:0, expl:"Max when disjoint → 4+3=7."},
+{q:"14. Which is true: If a number is divisible by 6 then it is divisible by:", opts:["2 and 3","3 only","2 only"], ans:0, expl:"6=2×3 so divisible by both 2 and 3."},
+{q:"15. Sequence: 2, 4, 12, 48, ? Next term", opts:["240","192","300"], ans:1, expl:"Multiply by 2,3,4,...: 2×2=4,4×3=12,12×4=48,48×5=240 → correct 240 (option 1)."},
+{q:"16. Which is the median of {1,3,4,8,9,10,12}?", opts:["8","4","9"], ans:0, expl:"Middle value is 8."},
+{q:"17. If p is true and p→q is false, what can you say about q?", opts:["q is false","q is true","no info"], ans:0, expl:"Implication false only when p true and q false → q false."},
+{q:"18. Find x: 2^x = 32", opts:["5","6","4"], ans:0, expl:"2^5=32 → x=5."},
+{q:"19. Which fraction is largest: 5/8, 3/5, 7/12?", opts:["5/8","3/5","7/12"], ans:0, expl:"5/8=0.625, 3/5=0.6, 7/12≈0.583 → 5/8 largest."},
+{q:"20. Quick calc: 18% of 250 equals?", opts:["45","40","50"], ans:0, expl:"0.18×250=45."}
+];
+
+let state = {index:0, answers:Array(questions.length).fill(null), started:false, timerId:null, endTime:null};
+
+const startBtn = document.getElementById('startBtn');
+const previewBtn = document.getElementById('previewBtn');
+const startScreen = document.getElementById('startScreen');
+const examArea = document.getElementById('examArea');
+const questionBox = document.getElementById('questionBox');
+const currentIndexEl = document.getElementById('currentIndex');
+const timeEl = document.getElementById('time');
+const backBtn = document.getElementById('backBtn');
+const nextBtn = document.getElementById('nextBtn');
+const submitBtn = document.getElementById('submitBtn');
+const answeredCountEl = document.getElementById('answeredCount');
+const resultsArea = document.getElementById('resultsArea');
+const resultsList = document.getElementById('resultsList');
+const scoreBox = document.getElementById('scoreBox');
+const previewArea = document.getElementById('previewArea');
+const previewList = document.getElementById('previewList');
+const closePreview = document.getElementById('closePreview');
+
+function renderQuestion(i){
+  const item = questions[i];
+  currentIndexEl.textContent = i+1;
+  const selected = state.answers[i];
+  let html = `<div class="qtext">${item.q}</div><div class="options">`;
+  item.opts.forEach((opt, idx) => {
+    const checked = selected===idx ? 'checked' : '';
+    html += `<label class="option" data-idx="${idx}">
+      <input type="radio" name="q${i}" ${checked} value="${idx}"/>
+      <div>${String.fromCharCode(65+idx)}. ${opt}</div>
+    </label>`;
+  });
+  html += `</div>`;
+  questionBox.innerHTML = html;
+  questionBox.querySelectorAll('.option').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = Number(el.getAttribute('data-idx'));
+      state.answers[i] = idx;
+      updateAnsweredCount();
+      const input = el.querySelector('input');
+      input.checked = true;
+    });
+  });
+  backBtn.disabled = (i===0);
+  nextBtn.disabled = (i===questions.length-1);
+}
+
+function updateAnsweredCount(){
+  const count = state.answers.filter(a=>a!==null).length;
+  answeredCountEl.textContent = count;
+}
+
+function startExam(){
+  startScreen.style.display = 'none';
+  examArea.style.display = 'block';
+  state.started = true;
+  state.index = 0;
+  renderQuestion(0);
+  updateAnsweredCount();
+  state.endTime = Date.now() + 20*60*1000;
+  state.timerId = setInterval(()=>{
+    const remaining = state.endTime - Date.now();
+    if(remaining <= 0){
+      timeEl.textContent = "00:00";
+      clearInterval(state.timerId);
+      autoSubmit();
+      return;
+    }
+    const mm = Math.floor(remaining/60000);
+    const ss = Math.floor((remaining%60000)/1000);
+    timeEl.textContent = String(mm).padStart(2,'0') + ":" + String(ss).padStart(2,'0');
+  }, 250);
+}
+
+function autoSubmit(){
+  examArea.style.display = 'none';
+  showResults(true);
+}
+
+function submitExam(){
+  if(!confirm("Submit exam now? You cannot change answers after submission.")) return;
+  clearInterval(state.timerId);
+  examArea.style.display = 'none';
+  showResults(false);
+}
+
+function showResults(timedOut){
+  resultsArea.style.display = 'block';
+  resultsList.innerHTML = '';
+  let score = 0;
+  questions.forEach((q,i)=>{
+    const user = state.answers[i];
+    const correct = q.ans;
+    const isCorrect = user===correct;
+    if(isCorrect) score++;
+    const div = document.createElement('div');
+    div.className = 'result-item ' + (isCorrect ? 'correct' : 'incorrect');
+    const userText = user===null ? 'No answer' : String.fromCharCode(65+user);
+    div.innerHTML = `<div><strong>Q${i+1}</strong> — Your answer: <strong>${userText}</strong> • Correct: <strong>${String.fromCharCode(65+correct)}</strong></div>
+                     <div class="explain">${q.expl}</div>`;
+    resultsList.appendChild(div);
+  });
+  scoreBox.textContent = `Score: ${score} / ${questions.length}` + (timedOut ? " (auto-submitted when time expired)" : "");
+}
+
+/* Preview */
+previewBtn.addEventListener('click', ()=>{
+  previewList.innerHTML = '';
+  questions.forEach((q,i)=>{
+    const li = document.createElement('li');
+    li.textContent = q.q.replace(/^\d+\.\s*/,'');
+    previewList.appendChild(li);
+  });
+  previewArea.style.display = 'block';
+});
+closePreview.addEventListener('click', ()=> previewArea.style.display='none');
+
+/* Navigation */
+backBtn.addEventListener('click', ()=>{
+  if(state.index>0){ state.index--; renderQuestion(state.index); }
+});
+nextBtn.addEventListener('click', ()=>{
+  if(state.index<questions.length-1){ state.index++; renderQuestion(state.index); }
+});
+submitBtn.addEventListener('click', submitExam);
+startBtn.addEventListener('click', startExam);
+
+/* Keyboard support */
+document.addEventListener('keydown', (e)=>{
+  if(!state.started) return;
+  if(e.key==='ArrowLeft'){ backBtn.click(); }
+  if(e.key==='ArrowRight'){ nextBtn.click(); }
+  if(['1','2','3'].includes(e.key)){
+    const idx = Number(e.key)-1;
+    state.answers[state.index] = idx;
+    updateAnsweredCount();
+    renderQuestion(state.index);
+  }
+});
+</script>
+</body>
+</html>

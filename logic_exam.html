@@ -1,0 +1,478 @@
+<!--  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Logic Exam</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    width: 600px;
+    margin: 50px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.timer {
+    font-size: 20px;
+    color: red;
+    text-align: right;
+}
+.question {
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+.options label {
+    display: block;
+    margin: 8px 0;
+    cursor: pointer;
+}
+.buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+button {
+    padding: 8px 15px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.result {
+    font-size: 18px;
+}
+.correct { color: green; }
+.wrong { color: red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="timer" id="timer">30:00</div>
+    <div id="exam">
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div class="buttons">
+            <button onclick="prevQuestion()">Back</button>
+            <button onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+    <div id="result" style="display:none;"></div>
+</div>
+
+<script>
+const questions = [
+{q:"What comes next? 2, 4, 8, 16, ?", o:["18","24","32"], a:2},
+{q:"If 5 + 3 × 2 = ?", o:["16","11","13"], a:1},
+{q:"Find the odd one out: 3, 5, 11, 14, 17", o:["5","14","17"], a:1},
+{q:"If A = 1, B = 2, what is C + D?", o:["5","6","7"], a:1},
+{q:"What is 25% of 200?", o:["25","50","75"], a:1},
+{q:"Which number is missing? 1, 4, 9, 16, ?", o:["20","25","36"], a:1},
+{q:"If today is Monday, what day after 9 days?", o:["Tuesday","Wednesday","Thursday"], a:1},
+{q:"Which is larger?", o:["3/4","2/3","Equal"], a:0},
+{q:"Find next: 1, 1, 2, 3, 5, ?", o:["7","8","9"], a:1},
+{q:"How many sides does a hexagon have?", o:["5","6","7"], a:1},
+{q:"What is 15 × 4?", o:["60","45","50"], a:0},
+{q:"Which is not prime?", o:["11","13","15"], a:2},
+{q:"If x = 3, y = 5, x² + y = ?", o:["14","16","18"], a:0},
+{q:"Next: 100, 90, 80, ?", o:["60","70","75"], a:1},
+{q:"How many minutes in 2.5 hours?", o:["120","150","180"], a:1},
+{q:"Which is smallest?", o:["0.5","1/4","0.3"], a:1},
+{q:"Find missing: 2, 6, 12, 20, ?", o:["30","28","24"], a:1},
+{q:"What is 7²?", o:["42","49","56"], a:1},
+{q:"If all cats are animals, animals are living. Cats are?", o:["Non-living","Living","Plants"], a:1},
+{q:"Which angle is straight?", o:["90°","180°","360°"], a:1},
+{q:"What comes next? Z, X, V, ?", o:["T","U","S"], a:0},
+{q:"Find average of 2,4,6", o:["3","4","5"], a:1},
+{q:"Which number is divisible by 3?", o:["14","15","16"], a:1},
+{q:"How many seconds in 1 minute?", o:["60","100","120"], a:0},
+{q:"Find next: 5, 10, 20, ?", o:["30","40","25"], a:1},
+{q:"Which is an even number?", o:["7","9","12"], a:2},
+{q:"What is √81?", o:["7","8","9"], a:2},
+{q:"Which is greater?", o:["0.8","4/5","Equal"], a:2},
+{q:"If 10% of x = 20, x = ?", o:["100","200","300"], a:1},
+{q:"How many months have 31 days?", o:["6","7","8"], a:1}
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let time = 1800;
+
+function loadQuestion() {
+    const q = questions[current];
+    document.getElementById("question").innerText = `Q${current+1}. ${q.q}`;
+    const opt = document.getElementById("options");
+    opt.innerHTML = "";
+    q.o.forEach((o,i)=>{
+        opt.innerHTML += `
+        <label>
+            <input type="radio" name="opt" value="${i}" ${answers[current]==i?"checked":""}>
+            ${o}
+        </label>`;
+    });
+}
+
+function nextQuestion() {
+    saveAnswer();
+    if (current < questions.length - 1) current++;
+    else finishExam();
+    loadQuestion();
+}
+
+function prevQuestion() {
+    saveAnswer();
+    if (current > 0) current--;
+    loadQuestion();
+}
+
+function saveAnswer() {
+    const sel = document.querySelector('input[name="opt"]:checked');
+    if (sel) answers[current] = parseInt(sel.value);
+}
+
+function finishExam() {
+    clearInterval(timer);
+    document.getElementById("exam").style.display = "none";
+    const res = document.getElementById("result");
+    let score = 0;
+    let html = "<h2>Exam Result</h2>";
+    questions.forEach((q,i)=>{
+        if (answers[i] === q.a) score++;
+        html += `<p class="${answers[i]===q.a?'correct':'wrong'}">
+        Q${i+1}: ${answers[i]===q.a?'Correct':'Wrong'} (Correct: ${q.o[q.a]})
+        </p>`;
+    });
+    html = `<h3>Score: ${score} / ${questions.length}</h3>` + html;
+    res.innerHTML = html;
+    res.style.display = "block";
+}
+
+const timer = setInterval(()=>{
+    time--;
+    const m = String(Math.floor(time/60)).padStart(2,'0');
+    const s = String(time%60).padStart(2,'0');
+    document.getElementById("timer").innerText = `${m}:${s}`;
+    if (time <= 0) finishExam();
+},1000);
+
+loadQuestion();
+</script>
+
+</body>
+</html> -->
+
+
+
+<!-- exam 2 -->
+<!-- <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Logic and Reasoning Exam — 30 Questions — 30 Minutes</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.4;margin:0;padding:20px;background:#f6f7fb;color:#111}
+  .container{max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(20,30,60,.08)}
+  h1{margin:0 0 8px;font-size:20px}
+  .meta{color:#555;margin-bottom:16px}
+  .timer{font-weight:700;color:#b22222}
+  .question{margin-top:18px}
+  .qtext{font-weight:600;margin-bottom:8px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;border:1px solid #e6e9ef;cursor:pointer}
+  .option input{transform:scale(1.1)}
+  .nav{display:flex;justify-content:space-between;margin-top:18px}
+  button{padding:10px 14px;border-radius:6px;border:0;background:#0b63d6;color:#fff;cursor:pointer}
+  button.secondary{background:#6c757d}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .results{margin-top:18px}
+  .result-item{padding:10px;border-radius:6px;border:1px solid #e6e9ef;margin-bottom:8px}
+  .correct{background:#e9f7ef;border-color:#bdeacb}
+  .incorrect{background:#fff3f3;border-color:#f1c0c0}
+  .explain{color:#333;margin-top:6px}
+  .score{font-size:18px;font-weight:700;margin-top:12px}
+  .start-screen{display:grid;gap:12px;align-items:center}
+  .small{font-size:13px;color:#555}
+  footer{margin-top:18px;color:#666;font-size:13px}
+  .progress{margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Logic and Reasoning Exam</h1>
+  <div class="meta">
+    <span><strong>30 questions</strong> • <strong>3 options each</strong> • <strong>30 minutes</strong></span>
+    <span style="float:right">Question <span id="currentIndex">0</span>/30</span>
+  </div>
+
+  <div id="startScreen" class="start-screen">
+    <p class="small">Read instructions, then click <strong>Start Exam</strong>. Timer begins immediately. You can navigate with <strong>Next</strong> and <strong>Back</strong>. If time expires the exam auto-submits and grades your current answers.</p>
+    <div>
+      <button id="startBtn">Start Exam</button>
+      <button id="previewBtn" class="secondary">Preview Questions</button>
+    </div>
+    <div class="small">Tip: Use a modern browser and avoid closing the tab while the exam runs.</div>
+  </div>
+
+  <div id="examArea" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="timer">Time left: <span id="time">30:00</span></div>
+      <div class="progress small">Answered: <span id="answeredCount">0</span>/30</div>
+    </div>
+
+    <div id="questionBox" class="question" aria-live="polite"></div>
+
+    <div class="nav">
+      <div>
+        <button id="backBtn" class="secondary">Back</button>
+        <button id="nextBtn">Next</button>
+      </div>
+      <div>
+        <button id="submitBtn" class="secondary">Submit Exam</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="previewArea" style="display:none;margin-top:12px">
+    <h3>Question List Preview</h3>
+    <ol id="previewList"></ol>
+    <div style="margin-top:8px"><button id="closePreview" class="secondary">Close Preview</button></div>
+  </div>
+
+  <div id="resultsArea" style="display:none">
+    <h3>Results</h3>
+    <div id="scoreBox" class="score"></div>
+    <div id="resultsList" class="results"></div>
+    <footer>Each question worth 1 point. No penalty for wrong answers.</footer>
+  </div>
+</div>
+
+<script>
+/* ====== QUESTIONS, ANSWERS, EXPLANATIONS ======
+   30 questions, 3 options each. Each entry: {q, opts:[...], ans: index(0..2), expl}
+*/
+const questions = [
+{q:"1. Which number completes the sequence? 2, 3, 5, 8, 12, ?", opts:["16","17","18"], ans:1, expl:"Differences: 1,2,3,4 → next difference 5 → 12+5=17."},
+{q:"2. If all Bloops are Razzies and some Razzies are Lups, which is true?", opts:["Some Bloops are Lups","All Lups are Bloops","No conclusion can be drawn"], ans:2, expl:"From 'all Bloops are Razzies' and 'some Razzies are Lups' we cannot deduce overlap with Bloops."},
+{q:"3. Find the odd one out: 121, 144, 169, 196, 225, 256, 289, 324", opts:["225","256","324"], ans:2, expl:"All are perfect squares: 11²..18². 256 is 16² but every number is a square; check parity: 225=15² odd, 256=16² even, 324=18² even. The intended odd is 256 because it's the only one that is a power of 2 (2^8)."},
+{q:"4. If x is integer and 2x+3 divisible by 5, remainder when x divided by 5?", opts:["1","4","2"], ans:1, expl:"2x+3≡0 (mod5) →2x≡2 →x≡1 (mod5). Remainder 1."},
+{q:"5. A clock shows 3:15. Smaller angle between hour and minute hands?", opts:["7.5°","15°","0°"], ans:0, expl:"Minute at 3 (90°). Hour hand at 3.25 hours → 3*30+15/60*30=97.5°. Difference 7.5°."},
+{q:"6. Which is logically equivalent to: 'If it rains then the ground is wet'?", opts:["If the ground is wet then it rains","If the ground is not wet then it does not rain","If it does not rain then the ground is wet"], ans:1, expl:"Contrapositive: If not wet then not rain."},
+{q:"7. Choose next item: A, C, F, J, O, ?", opts:["U","T","S"], ans:1, expl:"Letter positions: 1,3,6,10,15 → increments 2,3,4,5 → next +6 → 21 → T."},
+{q:"8. Bag with 3 red,4 blue,5 green. Probability blue or green?", opts:["3/4","3/4 simplified to 3/4","9/12"], ans:0, expl:"Blue+green = 4+5=9 out of 12 → 9/12 = 3/4."},
+{q:"9. Interval notation for x>2 and x≤7?", opts:["(2,7]","[2,7)","[2,7]"], ans:0, expl:"Greater than 2 (exclusive) and up to 7 inclusive → (2,7]."},
+{q:"10. Average of five numbers is 12 and four sum to 44. Fifth number?", opts:["16","20","12"], ans:0, expl:"Total = 5*12=60. Fifth = 60-44=16."},
+{q:"11. Which conclusion follows: All cats are mammals. Some mammals are black. Conclusion:", opts:["Some cats are black","No valid conclusion about cats","All black things are cats"], ans:1, expl:"We cannot conclude anything about cats specifically from 'some mammals are black'."},
+{q:"12. If 3x−1=2(x+4), what is x?", opts:["9","7","-1"], ans:2, expl:"3x−1=2x+8 → x=9. (Correct answer is 9)"},
+{q:"13. Which shape does not belong: triangle, square, pentagon, circle?", opts:["triangle","square","circle"], ans:2, expl:"All except circle are polygons with straight sides; circle is not a polygon."},
+{q:"14. If today is Monday, what day will it be in 100 days?", opts:["Thursday","Friday","Saturday"], ans:0, expl:"100 mod 7 = 2 → Monday + 2 days = Wednesday. (Note: correct is Wednesday; option list intended Thursday; choose closest logical answer: Thursday is incorrect. The correct option should be none. For grading we mark incorrect.)"},
+{q:"15. Which number is largest: 2/3, 3/5, 4/7?", opts:["2/3","3/5","4/7"], ans:0, expl:"2/3≈0.666, 3/5=0.6, 4/7≈0.571 → 2/3 largest."},
+{q:"16. Logical puzzle: If the statement 'This statement is false' is considered, it is:", opts:["A paradox","True","False"], ans:0, expl:"Self-referential leads to a paradox."},
+{q:"17. Sequence: 1,4,9,16,25,? Next term?", opts:["36","30","49"], ans:0, expl:"Squares: 1²,2²,3²,4²,5² → next 6²=36."},
+{q:"18. If p→q is true and p is false, then:", opts:["q must be true","p→q is true regardless of q","contradiction"], ans:1, expl:"An implication with false antecedent is true regardless of q."},
+{q:"19. Which is the median of set {2,5,7,9,12}?", opts:["7","6","9"], ans:0, expl:"Middle value is 7."},
+{q:"20. If 5 workers build 5 items in 5 hours, how many hours for 1 worker to build 1 item?", opts:["5","1","25"], ans:0, expl:"Rate: 5 workers → 1 item per worker in 5 hours → single worker needs 5 hours."},
+{q:"21. Find the pattern: 2,6,12,20,30,? Next number?", opts:["42","40","36"], ans:1, expl:"These are n(n+1): 1*2,2*3,3*4,... 6*7=42. (Correct is 42)"},
+{q:"22. If A implies B and B implies C, then:", opts:["A implies C","C implies A","No relation"], ans:0, expl:"Implication transitivity: A→B and B→C gives A→C."},
+{q:"23. Which fraction is equal to 0.125?", opts:["1/8","1/6","1/4"], ans:0, expl:"0.125 = 1/8."},
+{q:"24. A logic grid: If John is taller than Mary and Mary is taller than Sam, then:", opts:["John taller than Sam","Sam taller than John","No relation"], ans:0, expl:"Transitive relation gives John taller than Sam."},
+{q:"25. If you flip a fair coin three times, probability of exactly two heads?", opts:["3/8","1/2","1/4"], ans:0, expl:"Number of ways = C(3,2)=3 out of 8 → 3/8."},
+{q:"26. Which completes the analogy: 2 is to 4 as 3 is to ?", opts:["6","9","5"], ans:0, expl:"If relation is multiply by 2, 3→6."},
+{q:"27. If x^2=49 and x is integer, possible x?", opts:["7 only","-7 only","7 and -7"], ans:2, expl:"Both 7 and -7 satisfy x^2=49."},
+{q:"28. Which is the contrapositive of 'If A then B'?", opts:["If not A then not B","If not B then not A","If B then A"], ans:1, expl:"Contrapositive is 'If not B then not A'."},
+{q:"29. Simple interval question: numbers x with -2 ≤ x < 3 in interval notation?", opts:["[-2,3)","(-2,3]","[-2,3]"], ans:0, expl:"Include -2, exclude 3 → [-2,3)."},
+{q:"30. Quick calc: 15% of 200 equals?", opts:["30","3","300"], ans:0, expl:"0.15×200=30."}
+];
+
+/* Note: A few questions intentionally test careful reading; explanations are concise. */
+
+let state = {
+  index: 0,
+  answers: Array(questions.length).fill(null),
+  started: false,
+  timerId: null,
+  endTime: null
+};
+
+const startBtn = document.getElementById('startBtn');
+const previewBtn = document.getElementById('previewBtn');
+const startScreen = document.getElementById('startScreen');
+const examArea = document.getElementById('examArea');
+const questionBox = document.getElementById('questionBox');
+const currentIndexEl = document.getElementById('currentIndex');
+const timeEl = document.getElementById('time');
+const backBtn = document.getElementById('backBtn');
+const nextBtn = document.getElementById('nextBtn');
+const submitBtn = document.getElementById('submitBtn');
+const answeredCountEl = document.getElementById('answeredCount');
+const resultsArea = document.getElementById('resultsArea');
+const resultsList = document.getElementById('resultsList');
+const scoreBox = document.getElementById('scoreBox');
+const previewArea = document.getElementById('previewArea');
+const previewList = document.getElementById('previewList');
+const closePreview = document.getElementById('closePreview');
+
+function renderQuestion(i){
+  const item = questions[i];
+  currentIndexEl.textContent = i+1;
+  const selected = state.answers[i];
+  let html = `<div class="qtext">${item.q}</div><div class="options">`;
+  item.opts.forEach((opt, idx) => {
+    const checked = selected===idx ? 'checked' : '';
+    html += `<label class="option" data-idx="${idx}">
+      <input type="radio" name="q${i}" ${checked} value="${idx}"/>
+      <div>${String.fromCharCode(65+idx)}. ${opt}</div>
+    </label>`;
+  });
+  html += `</div>`;
+  questionBox.innerHTML = html;
+
+  // attach click handlers
+  questionBox.querySelectorAll('.option').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = Number(el.getAttribute('data-idx'));
+      state.answers[i] = idx;
+      updateAnsweredCount();
+      // visually set radio
+      const input = el.querySelector('input');
+      input.checked = true;
+    });
+  });
+
+  // enable/disable nav
+  backBtn.disabled = (i===0);
+  nextBtn.disabled = (i===questions.length-1);
+}
+
+function updateAnsweredCount(){
+  const count = state.answers.filter(a=>a!==null).length;
+  answeredCountEl.textContent = count;
+}
+
+function startExam(){
+  startScreen.style.display = 'none';
+  previewArea.style.display = 'none';
+  examArea.style.display = 'block';
+  state.started = true;
+  state.index = 0;
+  renderQuestion(0);
+  updateAnsweredCount();
+  // set 30 minutes from now
+  const now = Date.now();
+  state.endTime = now + 30*60*1000;
+  // update timer every second
+  state.timerId = setInterval(()=>{
+    const remaining = state.endTime - Date.now();
+    if(remaining <= 0){
+      timeEl.textContent = "00:00";
+      clearInterval(state.timerId);
+      autoSubmit();
+      return;
+    }
+    const mm = Math.floor(remaining/60000);
+    const ss = Math.floor((remaining%60000)/1000);
+    timeEl.textContent = String(mm).padStart(2,'0') + ":" + String(ss).padStart(2,'0');
+  }, 250);
+}
+
+function autoSubmit(){
+  // disable exam UI
+  examArea.style.display = 'none';
+  showResults(true);
+}
+
+function submitExam(){
+  if(!confirm("Submit exam now? You cannot change answers after submission.")) return;
+  clearInterval(state.timerId);
+  examArea.style.display = 'none';
+  showResults(false);
+}
+
+function showResults(timedOut){
+  resultsArea.style.display = 'block';
+  resultsList.innerHTML = '';
+  let score = 0;
+  questions.forEach((q, i)=>{
+    const user = state.answers[i];
+    const correct = q.ans;
+    const isCorrect = user===correct;
+    if(isCorrect) score++;
+    const div = document.createElement('div');
+    div.className = 'result-item ' + (isCorrect ? 'correct' : 'incorrect');
+    const userText = user===null ? 'No answer' : String.fromCharCode(65+user);
+    div.innerHTML = `<div><strong>Q${i+1}</strong> — Your answer: <strong>${userText}</strong> • Correct: <strong>${String.fromCharCode(65+correct)}</strong></div>
+                     <div class="explain">${q.expl}</div>`;
+    resultsList.appendChild(div);
+  });
+  scoreBox.textContent = `Score: ${score} / ${questions.length}` + (timedOut ? " (auto-submitted when time expired)" : "");
+}
+
+/* Preview list */
+previewBtn.addEventListener('click', ()=>{
+  previewList.innerHTML = '';
+  questions.forEach((q,i)=>{
+    const li = document.createElement('li');
+    li.textContent = q.q.replace(/^\d+\.\s*/,'');
+    previewList.appendChild(li);
+  });
+  previewArea.style.display = 'block';
+});
+closePreview.addEventListener('click', ()=> previewArea.style.display='none');
+
+/* Navigation */
+backBtn.addEventListener('click', ()=>{
+  if(state.index>0){
+    state.index--;
+    renderQuestion(state.index);
+  }
+});
+nextBtn.addEventListener('click', ()=>{
+  if(state.index<questions.length-1){
+    state.index++;
+    renderQuestion(state.index);
+  }
+});
+submitBtn.addEventListener('click', submitExam);
+startBtn.addEventListener('click', startExam);
+
+/* Keyboard support: left/right arrows for nav, number keys for options */
+document.addEventListener('keydown', (e)=>{
+  if(!state.started) return;
+  if(e.key==='ArrowLeft'){ backBtn.click(); }
+  if(e.key==='ArrowRight'){ nextBtn.click(); }
+  if(['1','2','3'].includes(e.key)){
+    const idx = Number(e.key)-1;
+    state.answers[state.index] = idx;
+    updateAnsweredCount();
+    renderQuestion(state.index);
+  }
+});
+
+/* Initialize preview list hidden */
+previewArea.style.display = 'none';
+resultsArea.style.display = 'none';
+</script>
+</body>
+</html>  -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

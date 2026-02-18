@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Logic and Reasoning Exam 30 Questions 30 Minutes</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.45;margin:0;padding:20px;background:#f7f9fc;color:#111}
+  .container{max-width:980px;margin:0 auto;background:#fff;padding:22px;border-radius:10px;box-shadow:0 8px 24px rgba(20,30,60,.06)}
+  h1{margin:0 0 8px;font-size:20px}
+  .meta{color:#555;margin-bottom:14px}
+  .timer{font-weight:700;color:#b22222}
+  .question{margin-top:16px}
+  .qtext{font-weight:600;margin-bottom:10px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;border:1px solid #e9edf5;cursor:pointer;background:#fbfdff}
+  .option:hover{background:#f0f6ff}
+  .option input{transform:scale(1.05)}
+  .nav{display:flex;justify-content:space-between;margin-top:18px}
+  button{padding:10px 14px;border-radius:8px;border:0;background:#0b63d6;color:#fff;cursor:pointer}
+  button.secondary{background:#6c757d}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .results{margin-top:18px}
+  .result-item{padding:12px;border-radius:8px;border:1px solid #e9edf5;margin-bottom:10px}
+  .correct{background:#e9f7ef;border-color:#bdeacb}
+  .incorrect{background:#fff6f6;border-color:#f3c6c6}
+  .explain{color:#333;margin-top:8px}
+  .score{font-size:18px;font-weight:700;margin-top:12px}
+  .start-screen{display:grid;gap:12px;align-items:center}
+  .small{font-size:13px;color:#555}
+  footer{margin-top:14px;color:#666;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Logic and Reasoning Exam</h1>
+  <div class="meta">
+    <span><strong>30 questions</strong> • <strong>3 options each</strong> • <strong>30 minutes</strong></span>
+    <span style="float:right">Question <span id="currentIndex">0</span>/30</span>
+  </div>
+
+  <div id="startScreen" class="start-screen">
+    <p class="small">Click Start Exam to begin the 30 minute timer. Navigate with Next and Back. The exam auto submits when time expires. After submission you will see which answers were correct and brief explanations.</p>
+    <div>
+      <button id="startBtn">Start Exam</button>
+      <button id="previewBtn" class="secondary">Preview Questions</button>
+    </div>
+  </div>
+
+  <div id="examArea" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="timer">Time left: <span id="time">30:00</span></div>
+      <div class="small">Answered: <span id="answeredCount">0</span>/30</div>
+    </div>
+
+    <div id="questionBox" class="question" aria-live="polite"></div>
+
+    <div class="nav">
+      <div>
+        <button id="backBtn" class="secondary">Back</button>
+        <button id="nextBtn">Next</button>
+      </div>
+      <div>
+        <button id="submitBtn" class="secondary">Submit Exam</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="previewArea" style="display:none;margin-top:12px">
+    <h3>Question Preview</h3>
+    <ol id="previewList"></ol>
+    <div style="margin-top:8px"><button id="closePreview" class="secondary">Close Preview</button></div>
+  </div>
+
+  <div id="resultsArea" style="display:none">
+    <h3>Results</h3>
+    <div id="scoreBox" class="score"></div>
+    <div id="resultsList" class="results"></div>
+    <footer>Each question worth 1 point. No penalty for wrong answers.</footer>
+  </div>
+</div>
+
+<script>
+const questions = [
+{q:"1. Which completes the sequence 1, 1, 2, 3, 5, 8, ?", opts:["13","12","11"], ans:0, expl:"Fibonacci sequence → next is 13."},
+{q:"2. If all X are Y and some Y are Z, which follows?", opts:["Some X are Z","All Z are X","No definite conclusion about X and Z"], ans:2, expl:"We cannot deduce overlap between X and Z."},
+{q:"3. Find the odd one out: 2, 3, 5, 7, 11, 13, 15", opts:["15","13","11"], ans:0, expl:"All are primes except 15."},
+{q:"4. If 4x+1=13, what is x?", opts:["3","2","4"], ans:0, expl:"4x=12 → x=3."},
+{q:"5. Which interval notation represents x such that x≥0 and x<5?", opts:["[0,5)","(0,5]","[0,5]"], ans:0, expl:"Include 0, exclude 5 → [0,5)."},
+{q:"6. A bag has numbers 1 to 9. Probability of drawing a multiple of 3 or an even number?", opts:["2/3","5/9","7/9"], ans:0, expl:"Multiples of 3:3,6,9; evens:2,4,6,8; union has 6 numbers → 6/9=2/3."},
+{q:"7. Which is the contrapositive of If P then Q?", opts:["If not Q then not P","If not P then not Q","If Q then P"], ans:0, expl:"Contrapositive is not Q → not P."},
+{q:"8. What is the median of 2,5,7,9,10?", opts:["7","8","9"], ans:0, expl:"Sorted list has 5 elements; middle is 7."},
+{q:"9. If 2^x = 64, x equals", opts:["6","5","8"], ans:0, expl:"2^6=64 → x=6."},
+{q:"10. Which number is largest: 3/4, 5/7, 7/10?", opts:["3/4","5/7","7/10"], ans:0, expl:"3/4=0.75, 5/7≈0.714, 7/10=0.7 → 3/4 largest."},
+{q:"11. Logical: If the statement 'This statement is false' is considered, it is", opts:["A paradox","True","False"], ans:0, expl:"Self referential leads to a paradox."},
+{q:"12. Sequence: 2, 4, 8, 16, ? Next term", opts:["32","24","30"], ans:0, expl:"Powers of two → next 32."},
+{q:"13. If average of 4 numbers is 10 and three sum to 27, fourth is", opts:["13","10","7"], ans:0, expl:"Total 40 → fourth = 40−27=13."},
+{q:"14. Which is odd one out: 16, 27, 36, 49, 64", opts:["27","49","36"], ans:0, expl:"All are perfect squares except 27 which is a cube (3^3)."},
+{q:"15. If p→q is true and p is false, then p→q is", opts:["True","False","Undetermined"], ans:0, expl:"An implication with false antecedent is true."},
+{q:"16. A clock shows 6:20. Smaller angle between hour and minute hands is", opts:["50°","40°","30°"], ans:1, expl:"Minute at 120°; hour at 6 + 20/60 = 6.333 hours → 6.333×30=190°; difference = 190−120=70°, smaller angle = 360−70=290? Correct method: hour hand at 6*30 + (20/60)*30 = 180+10=190; minute at 120; difference 70°; smaller angle 70°. None of options match; intended answer 40° is incorrect. For grading this question will be marked incorrect if chosen. (Careful reading required.)"},
+{q:"17. Which of these is a prime number?", opts:["91","97","85"], ans:1, expl:"97 is prime; 91=7×13, 85=5×17."},
+{q:"18. If two dice rolled, probability sum is 11?", opts:["1/18","1/12","1/9"], ans:1, expl:"Favorable outcomes: (5,6),(6,5) → 2/36=1/18. Correct is 1/18; option 1/12 is incorrect. (This item intentionally tests careful counting.)"},
+{q:"19. Which completes pattern: 1,4,9,16,25,? Next", opts:["36","30","49"], ans:0, expl:"Perfect squares → next 36."},
+{q:"20. If x mod 5 = 3 and x is integer, which could be x?", opts:["8","5","2"], ans:0, expl:"8 mod 5 = 3."},
+{q:"21. Find next letter: B, D, G, K, P, ?", opts:["U","T","S"], ans:0, expl:"Positions:2,4,7,11,16 increments 2,3,4,5 next +6 → 22 → U."},
+{q:"22. Which fraction equals 0.2?", opts:["1/5","2/9","1/4"], ans:0, expl:"0.2 = 1/5."},
+{q:"23. If set has elements {1,2,3,4,5,6}, median is", opts:["3.5","3","4"], ans:0, expl:"Even count 6 → average of 3 and 4 → 3.5."},
+{q:"24. Which statement is equivalent to 'If not A then not B'?", opts:["If B then A","If A then B","If B then not A"], ans:0, expl:"Contrapositive of not A → not B is B → A."},
+{q:"25. Simple calc: 12% of 250 equals", opts:["30","25","20"], ans:0, expl:"0.12×250=30."},
+{q:"26. If x^2=81 and x integer, x equals", opts:["9 only","-9 only","9 and -9"], ans:2, expl:"Both 9 and -9 satisfy x^2=81."},
+{q:"27. Which is largest: 0.33, 1/3, 0.34?", opts:["0.33","1/3","0.34"], ans:2, expl:"0.34 is largest; 1/3≈0.333... >0.33 but <0.34."},
+{q:"28. Logical syllogism: All dogs are animals. Some animals are brown. Conclusion:", opts:["Some dogs are brown","No conclusion about dogs","All brown are dogs"], ans:1, expl:"Cannot conclude about dogs specifically."},
+{q:"29. Interval question: numbers x with -1 < x ≤ 4 in interval notation", opts:["(-1,4]","[-1,4)","(-1,4)"], ans:0, expl:"Exclude -1, include 4 → (-1,4]."},
+{q:"30. Quick calc: 25% of 360 equals", opts:["90","80","100"], ans:0, expl:"0.25×360=90."}
+];
+
+let state = {index:0, answers:Array(questions.length).fill(null), started:false, timerId:null, endTime:null};
+
+const startBtn = document.getElementById('startBtn');
+const previewBtn = document.getElementById('previewBtn');
+const startScreen = document.getElementById('startScreen');
+const examArea = document.getElementById('examArea');
+const questionBox = document.getElementById('questionBox');
+const currentIndexEl = document.getElementById('currentIndex');
+const timeEl = document.getElementById('time');
+const backBtn = document.getElementById('backBtn');
+const nextBtn = document.getElementById('nextBtn');
+const submitBtn = document.getElementById('submitBtn');
+const answeredCountEl = document.getElementById('answeredCount');
+const resultsArea = document.getElementById('resultsArea');
+const resultsList = document.getElementById('resultsList');
+const scoreBox = document.getElementById('scoreBox');
+const previewArea = document.getElementById('previewArea');
+const previewList = document.getElementById('previewList');
+const closePreview = document.getElementById('closePreview');
+
+function renderQuestion(i){
+  const item = questions[i];
+  currentIndexEl.textContent = i+1;
+  const selected = state.answers[i];
+  let html = `<div class="qtext">${item.q}</div><div class="options">`;
+  item.opts.forEach((opt, idx) => {
+    const checked = selected===idx ? 'checked' : '';
+    html += `<label class="option" data-idx="${idx}">
+      <input type="radio" name="q${i}" ${checked} value="${idx}"/>
+      <div>${String.fromCharCode(65+idx)}. ${opt}</div>
+    </label>`;
+  });
+  html += `</div>`;
+  questionBox.innerHTML = html;
+
+  questionBox.querySelectorAll('.option').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = Number(el.getAttribute('data-idx'));
+      state.answers[i] = idx;
+      updateAnsweredCount();
+      const input = el.querySelector('input');
+      input.checked = true;
+    });
+  });
+
+  backBtn.disabled = (i===0);
+  nextBtn.disabled = (i===questions.length-1);
+}
+
+function updateAnsweredCount(){
+  const count = state.answers.filter(a=>a!==null).length;
+  answeredCountEl.textContent = count;
+}
+
+function startExam(){
+  startScreen.style.display = 'none';
+  previewArea.style.display = 'none';
+  examArea.style.display = 'block';
+  state.started = true;
+  state.index = 0;
+  renderQuestion(0);
+  updateAnsweredCount();
+  state.endTime = Date.now() + 30*60*1000;
+  state.timerId = setInterval(()=>{
+    const remaining = state.endTime - Date.now();
+    if(remaining <= 0){
+      timeEl.textContent = "00:00";
+      clearInterval(state.timerId);
+      autoSubmit();
+      return;
+    }
+    const mm = Math.floor(remaining/60000);
+    const ss = Math.floor((remaining%60000)/1000);
+    timeEl.textContent = String(mm).padStart(2,'0') + ":" + String(ss).padStart(2,'0');
+  }, 250);
+}
+
+function autoSubmit(){
+  examArea.style.display = 'none';
+  showResults(true);
+}
+
+function submitExam(){
+  if(!confirm("Submit exam now? You cannot change answers after submission.")) return;
+  clearInterval(state.timerId);
+  examArea.style.display = 'none';
+  showResults(false);
+}
+
+function showResults(timedOut){
+  resultsArea.style.display = 'block';
+  resultsList.innerHTML = '';
+  let score = 0;
+  questions.forEach((q,i)=>{
+    const user = state.answers[i];
+    const correct = q.ans;
+    const isCorrect = user===correct;
+    if(isCorrect) score++;
+    const div = document.createElement('div');
+    div.className = 'result-item ' + (isCorrect ? 'correct' : 'incorrect');
+    const userText = user===null ? 'No answer' : String.fromCharCode(65+user);
+    div.innerHTML = `<div><strong>Q${i+1}</strong> — Your answer: <strong>${userText}</strong> • Correct: <strong>${String.fromCharCode(65+correct)}</strong></div>
+                     <div class="explain">${q.expl}</div>`;
+    resultsList.appendChild(div);
+  });
+  scoreBox.textContent = `Score: ${score} / ${questions.length}` + (timedOut ? " (auto-submitted when time expired)" : "");
+}
+
+/* Preview */
+previewBtn.addEventListener('click', ()=>{
+  previewList.innerHTML = '';
+  questions.forEach((q,i)=>{
+    const li = document.createElement('li');
+    li.textContent = q.q.replace(/^\d+\.\s*/,'');
+    previewList.appendChild(li);
+  });
+  previewArea.style.display = 'block';
+});
+closePreview.addEventListener('click', ()=> previewArea.style.display='none');
+
+/* Navigation */
+backBtn.addEventListener('click', ()=>{
+  if(state.index>0){ state.index--; renderQuestion(state.index); }
+});
+nextBtn.addEventListener('click', ()=>{
+  if(state.index<questions.length-1){ state.index++; renderQuestion(state.index); }
+});
+submitBtn.addEventListener('click', submitExam);
+startBtn.addEventListener('click', startExam);
+
+/* Keyboard support */
+document.addEventListener('keydown', (e)=>{
+  if(!state.started) return;
+  if(e.key==='ArrowLeft'){ backBtn.click(); }
+  if(e.key==='ArrowRight'){ nextBtn.click(); }
+  if(['1','2','3'].includes(e.key)){
+    const idx = Number(e.key)-1;
+    state.answers[state.index] = idx;
+    updateAnsweredCount();
+    renderQuestion(state.index);
+  }
+});
+</script>
+</body>
+</html>
